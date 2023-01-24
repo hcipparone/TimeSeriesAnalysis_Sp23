@@ -29,3 +29,7 @@ Office hours: TBD
 Please check the syllabus and more information at our class website: <br>
 env790.github.io
 
+**Student** <br>
+
+Hugh Cipparone
+
