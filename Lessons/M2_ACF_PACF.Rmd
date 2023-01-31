@@ -164,4 +164,4 @@ Acf(ts_inflow_data[,1], lag.max = 50)
 Pacf(ts_inflow_data[,1], lag.max=50)
 ```
 
-
+##Need to chop out all 2011 data from this dataset if using it !!!!
