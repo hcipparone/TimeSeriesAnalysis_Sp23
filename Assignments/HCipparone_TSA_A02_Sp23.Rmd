@@ -26,6 +26,9 @@ R packages needed for this assignment:"forecast","tseries", and "dplyr". Install
 library(forecast)
 library(tseries)
 library(dplyr)
+library(tidyverse)
+library(ggplot2)
+library(lubridate)
 ```
 
 
@@ -46,8 +49,15 @@ You will work only with the following columns: Total Biomass Energy Production, 
 
 ```{r}
 
-data.edit.1<-data %>% 
-  select(Total.Biomass.Energy.Production, Total.Renewable.Energy.Production, Hydroelectric.Power.Consumption)
+  
+date<-ym(data$Month)
+  
+data.edit<-cbind(data,date)%>% 
+  select(date,Total.Biomass.Energy.Production, Total.Renewable.Energy.Production, Hydroelectric.Power.Consumption)
+
+head(data.edit)
+
+
 
 ```
 
@@ -57,8 +67,8 @@ Transform your data frame in a time series object and specify the starting point
 
 ```{r}
 
-
-
+ts_energy <- ts(data.edit[,(2:4)], frequency=12, start=c(1931,1)) 
+head(ts_energy)
 ```
 
 
@@ -66,6 +76,16 @@ Transform your data frame in a time series object and specify the starting point
 Compute mean and standard deviation for these three series.
 
 ```{r}
+
+mean.biomass<-mean(data.edit$Total.Biomass.Energy.Production)
+sd(data.edit$Total.Biomass.Energy.Production)
+
+mean.renewable<-mean(data.edit$Total.Renewable.Energy.Production)
+sd(data.edit$Total.Renewable.Energy.Production)
+
+mean.hydro<-mean(data.edit$Hydroelectric.Power.Consumption)
+sd(data.edit$Hydroelectric.Power.Consumption)
+
 
 ```
 
@@ -75,6 +95,30 @@ Display and interpret the time series plot for each of these variables. Try to m
 
 ```{r}
 
+ggplot(data.edit, aes(x=date, y=data.edit[,2])) +
+            geom_line(color="blue") +
+            ylab("Total Biomass Energy Production")+
+            xlab("Date")+
+            ggtitle("Biomass Energy Production over Time")+
+            geom_hline(yintercept=mean.biomass, color="black")
+
+
+ggplot(data.edit, aes(x=date, y=data.edit[,3])) +
+            geom_line(color="blue") +
+            ylab("Total Renewable Energy Production")+
+            xlab("Date")+
+            ggtitle("Renewable Energy Production over Time")+
+            geom_hline(yintercept=mean.renewable, color="black")
+
+ggplot(data.edit, aes(x=date, y=data.edit[,4])) +
+            geom_line(color="blue") +
+            ylab("Hydroelectric Power Consumption")+
+            xlab("Date")+
+            ggtitle("Hydroelectric Power Consumption over Time")+
+            geom_hline(yintercept=mean.hydro, color="black")
+
+
+
 ```
 
 
@@ -83,15 +127,26 @@ Compute the correlation between these three series. Are they significantly corre
 
 ```{r}
 
-```
+cor(ts_energy)
 
+```
+*Answer*: They are all significantly correlated with each other (pearson, p-value < 0.05)
 
 ## Question 6
 Compute the autocorrelation function from lag 1 up to lag 40 for these three variables. What can you say about these plots? Do the three of them have the same behavior?
 
 ```{r}
 
+Acf(ts_energy[,1],lag.max=40)
+
+Acf(ts_energy[,2],lag.max=40)
+
+Acf(ts_energy[,3],lag.max=40)
+
+
 ```
+*Answer*: The first two ACF plots display very little seasonality - instead just declining slowly as the lag increases. However the third plot - the plot representing hydroelectric consumption - displays relatively strong seasonality, with a dip in correlation every six months. Interestingly these dips in correlation - aka the strength of the relationship between those times and t0 - actually become non-significant. In both of the other plots - and the peak every 12 months in the hydroelectric plot - the correlations over time are always strongly positive.
+
 
 
 ## Question 7
@@ -99,6 +154,12 @@ Compute the partial autocorrelation function from lag 1 to lag 40 for these thre
 
 ```{r}
 
-```
+Pacf(ts_energy[,1],lag.max=40)
 
+Pacf(ts_energy[,2],lag.max=40)
+
+Pacf(ts_energy[,3],lag.max=40)
+
+```
+*Answer*: The interesting thing here is the difference between the ACF and the PACF plots. The PACF - partial autocorrelation plots - for both biomass and renewable energy production show none of the slowly decreasing trend we saw in their ACF plots. Instead, we're seeing that - when you think only of the correlation between the current time series and the lagged time series - they only rarely have significant correlations, and when we do see significant correlations they match across all plots including the hydroelectric time series - a clear distinction from the ACF plots. This suggests a strong trend over time in both the biomass and renewable plots, because only a strong trend - or linkage in values that is carried over between lags - would show the ACF as being so heavily correlated while the PACF so uncorrelated. Those middle values in the correlation have to be increasing the correlation, because when they're removed in the PACF that strongly positive relationship across all lags disappears.
 

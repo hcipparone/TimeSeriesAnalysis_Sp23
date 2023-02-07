@@ -94,7 +94,7 @@ Note our last observation is from August 2011 but the data file was filled with 
 
 ```{r}
 #Remove last year by replacing current data frame
-inflow_data <- inflow_data[1:(nobs-412,]
+inflow_data <- inflow_data[1:(nobs-12),]
 
 #update object with number of observations
 nobs <- nobs-12
@@ -110,6 +110,9 @@ Many of the functions we will use require a time series object. You can transfor
 
 ```{r}
 
+ts_inflow <- ts(inflow_data[,2:16], frequency=12, start=c(1931,1)) #note that we are only transforming columns with inflow data, not the date columns
+ts_inflow
+
 ```
 
 
@@ -119,6 +122,21 @@ Let's use functions Acf() and Pacf() from package "forecast".
 
 ```{r acf}
 
+
+for(i in 1:nhydro){
+  assign(paste0("HP", i, "_acf"),Acf(ts_inflow[,i],lag.max=40, type="correlation", plot=TRUE))
+}
+
+
+for(i in 1:nhydro){
+  assign(paste0("HP", i, "_pacf"),Pacf(ts_inflow[,i],lag.max=40, type="correlation", plot=TRUE))
+}
+
+for(i in 1:nhydro){
+  par(mfrow=c(1,2))
+  Pacf(ts_inflow[,i],lag.max=40, main=paste0("HP",i))
+  Acf(ts_inflow[,i],lag.max=40, main=paste0("HP",i))
+}
 
 
 ```
@@ -131,10 +149,18 @@ Let's identify and remove trend component like we leaned on the recorded videos 
 ```{r}
 #Create vector t
 
-
+t<-1:nobs
+iHP = 4
 
 #Fit a linear trend to TS of iHP
 
+linear_trend<-lm(inflow_data[,5]~t)
+summary(linear_trend)
+
+ggplot(inflow_data, aes(x=my_date,y=inflow_data[,iHP+1]))+
+  geom_line()+
+  geom_smooth(method="lm")
+         
 
 ```
 
