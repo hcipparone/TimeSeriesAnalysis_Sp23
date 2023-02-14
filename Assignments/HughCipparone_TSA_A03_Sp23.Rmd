@@ -1,0 +1,297 @@
+---
+title: "ENV 790.30 - Time Series Analysis for Energy Data | Spring 2023"
+subtitle: "Assignment 3 - Due date 02/10/23"
+author: "Hugh Cipparone"
+output: pdf_document
+geometry: margin=2.54cm
+editor_options: 
+  chunk_output_type: console
+---
+  
+## Directions
+  
+You should open the .rmd file corresponding to this assignment on RStudio. The file is available on our class repository on Github. 
+
+Once you have the file open on your local machine the first thing you will do is rename the file such that it includes your first and last name (e.g., "LuanaLima_TSA_A02_Sp23.Rmd"). Then change "Student Name" on line 4 with your name. 
+
+Then you will start working through the assignment by  **creating code and output** that answer each question. Be sure to use this assignment document. Your report should contain the answer to each question and any plots/tables you obtained (when applicable).
+
+Please keep this R code chunk options for the report. It is easier for us to grade when we can see code and output together. And the tidy.opts will make sure that line breaks on your code chunks are automatically added for better visualization. 
+
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(echo = TRUE,tidy.opts=list(width.cutoff=80), tidy=FALSE) 
+```
+
+When you have completed the assignment, **Knit** the text and code into a single PDF file. Submit this pdf using Sakai. 
+
+## Questions 
+
+Consider the same data you used for A2 from the spreadsheet "Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source.xlsx". The data comes from the US Energy Information and Administration and corresponds to the December 2022 **Monthly** Energy Review. Once again you will work only with the following columns: Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption. Create a data frame structure with these three time series only. 
+
+R packages needed for this assignment:"forecast","tseries", and "Kendall". Install these packages, if you haven't done yet. Do not forget to load them before running your script, since they are NOT default packages.\\
+
+```{r}
+#Load/install required package here
+
+library(forecast)
+library(tseries)
+library(Kendall)
+library(lubridate)
+library(tidyverse)
+
+```
+
+#load and clean data
+```{r}
+
+data<-read.csv("./Data/Table_10.1_Renewable_Energy_Production_and_Consumption_by_Source-Edit.csv")
+
+date<-ym(data$Month)
+  
+data.edit<-cbind(data,date)%>% 
+  select(date,Total.Biomass.Energy.Production, Total.Renewable.Energy.Production, Hydroelectric.Power.Consumption)
+
+head(data.edit)
+
+```
+
+
+#create time series object
+```{r}
+ts_energy_a3 <- ts(data.edit[,(2:4)], frequency=12, start=c(1973,1)) 
+head(ts_energy_a3)
+```
+
+
+##Trend Component
+
+### Q1
+Create a plot window that has one row and three columns. And then for each object on your data frame, fill the plot window with time series plot, ACF and PACF. You may use the some code form A2, but I want all three plots on the same window this time. (Hint: use par() function)
+
+```{r}
+
+column.name=colnames(ts_energy_a3)
+
+
+par(mfrow=c(1,3))  #place plot side by side
+for(i in 1:3){
+  Acf(ts_energy_a3[,i],lag.max=40, main=column.name[i])
+  Pacf(ts_energy_a3[,i],lag.max=40, main=column.name[i])
+  plot(data.edit[,1], data.edit[,i+1], main=paste("Time Series"), xlab="Year", ylab=column.name[i])
+}
+
+
+
+```
+
+
+### Q2
+From the plot in Q1, do the series Total Biomass Energy Production, Total Renewable Energy Production, Hydroelectric Power Consumption appear to have a trend? If yes, what kind of trend?
+
+*Answer*: Total Biomass and Renewable both appear to have a trend upwards over time (although it appears not perfectly linear, particularly in the early years). Hydroelectric consumption however does not appear to have a trend over time.
+
+
+### Q3
+Use the *lm()* function to fit a linear trend to the three time series. Ask R to print the summary of the regression. Interpret the regression output, i.e., slope and intercept. Save the regression coefficients for further analysis.
+
+```{r}
+
+t<-c(1:nrow(data.edit))
+linear_trend_model_1=lm(data.edit[,2]~t)  
+summary(linear_trend_model_1)
+beta0_1=as.numeric(linear_trend_model_1$coefficients[1])
+beta1_1=as.numeric(linear_trend_model_1$coefficients[2])
+
+linear_trend_model_2=lm(data.edit[,3]~t)  
+summary(linear_trend_model_2)
+beta0_2=as.numeric(linear_trend_model_2$coefficients[1])
+beta1_2=as.numeric(linear_trend_model_2$coefficients[2])
+
+linear_trend_model_3=lm(data.edit[,4]~t)  
+summary(linear_trend_model_3)
+beta0_3=as.numeric(linear_trend_model_3$coefficients[1])
+beta1_3=as.numeric(linear_trend_model_3$coefficients[2])
+```
+
+*Interpretation*: For total biomass and total renewables, the slope is significantly positive (p<0.05, coeff > 0). For hydro power consumption, the slope is significantly negative (p<0.05, coeff <0). This means that, over time (and assuming that the linear regression assumptions hold - unclear if they do), total biomass energy production and renewables energy production has increased but hydro power consumption has decreased. It is important to note that the biomass and renewables coefficients are quite different - renewables being around 0.9 while biomass is about half of that rate - around 0.4. This suggests that renewables have seen a larger growth over time than biomass.
+ 
+### Q4
+Use the regression coefficients from Q3 to detrend the series. Plot the detrended series and compare with the plots from Q1. What happened? Did anything change?
+
+```{r}
+
+#Biomass
+detrend_data_1 <- data.edit[,2]-(beta0_1+beta1_1*t)
+
+
+ggplot(data.edit, aes(x=date, y=data.edit[,2])) +
+            geom_line(color="blue") +
+            ylab(column.name[1]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data_1), col="green")+
+            geom_smooth(aes(y=detrend_data_1),color="orange",method="lm") 
+
+#Renewables
+detrend_data_2 <- data.edit[,3]-(beta0_2+beta1_2*t)
+
+
+ggplot(data.edit, aes(x=date, y=data.edit[,3])) +
+            geom_line(color="blue") +
+            ylab(column.name[2]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data_2), col="green")+
+            geom_smooth(aes(y=detrend_data_2),color="orange",method="lm") 
+
+#Hydro
+detrend_data_3 <- data.edit[,4]-(beta0_3+beta1_3*t)
+
+
+ggplot(data.edit, aes(x=date, y=data.edit[,4])) +
+            geom_line(color="blue") +
+            ylab(column.name[3]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=detrend_data_3), col="green")+
+            geom_smooth(aes(y=detrend_data_3),color="orange",method="lm") 
+
+detrend_data<-cbind(date,detrend_data_1,detrend_data_2,detrend_data_3)
+
+```
+
+*Answer*: We can see that for each of the three series the trend was removed - or at least a linear regression now returns no significant variation over the course of the series.
+
+### Q5
+Plot ACF and PACF for the detrended series and compare with the plots from Q1. Did the plots change? How?
+
+```{r}
+ts_energy_a3_detrend <- ts(detrend_data[,(2:4)], frequency=12, start=c(1973,1)) 
+head(ts_energy_a3_detrend)
+
+par(mfrow=c(1,2))  #place plot side by side
+for(i in 1:3){
+  Acf(ts_energy_a3_detrend[,i],lag.max=40, main=column.name[i])
+  Pacf(ts_energy_a3_detrend[,i],lag.max=40, main=column.name[i])
+}
+```
+
+*Answer*: The hydro plot didn't appear to change much, but the biomass and renewables plots both appeared to have lower ACF values and increased the apparent seasonality (the wave-like motion) across the lags.
+
+## Seasonal Component
+
+Set aside the detrended series and consider the original series again from Q1 to answer Q6 to Q8.
+
+### Q6
+Do the series seem to have a seasonal trend? Which serie/series? Use function *lm()* to fit a seasonal means model (i.e. using the seasonal dummies) to this/these time series. Ask R to print the summary of the regression. Interpret the regression output. Save the regression coefficients for further analysis.
+
+*Answer*: The original series' renewables (to some degree) and hydro (to a large degree) have some seasonal trend. Looking at this regression output, it's clear to me that only the december values (the intercept) increases over time (p<0.05), or changes over time in any statistically significant manner. This, along with a cumulative p-value much larger than 0.05 for the test, suggests that there isn't seasonality on the biomass series. In the second series (renewables) we once again only see significance in the intercept over time, which - along with a non-significant overall p-value (p=0.1), suggests no seasonality. There may be more seasonality here, however - the p-value is close to a 10% confidence level, where for biomass the p-value was 0.8. In the final series multiple months have specific significant changes and the overall p-value is less than 0.05, which collectively indicates clear seasonality for the hydro data.
+
+```{r}
+
+dummies_1 <- seasonaldummy(ts_energy_a3[,1])  
+dummies_2 <- seasonaldummy(ts_energy_a3[,2])  
+dummies_3 <- seasonaldummy(ts_energy_a3[,3])  
+
+
+#Then fit a linear model to the seasonal dummies
+seas_means_model_1=lm(data.edit[,(2)]~dummies_1)
+summary(seas_means_model_1)
+
+seas_means_model_2=lm(data.edit[,(3)]~dummies_2)
+summary(seas_means_model_2)
+
+seas_means_model_3=lm(data.edit[,(4)]~dummies_3)
+summary(seas_means_model_3)
+
+#Store regression coefficients
+beta_int_1=seas_means_model_1$coefficients[1]
+beta_coeff_1=seas_means_model_1$coefficients[2:12]
+
+beta_int_2=seas_means_model_2$coefficients[1]
+beta_coeff_2=seas_means_model_2$coefficients[2:12]
+
+beta_int_3=seas_means_model_3$coefficients[1]
+beta_coeff_3=seas_means_model_3$coefficients[2:12]
+
+
+
+```
+
+
+### Q7
+Use the regression coefficients from Q6 to deseason the series. Plot the deseason series and compare with the plots from part Q1. Did anything change?
+
+*Answer*: I noticed a lessening of the severeity of each of the waves across all the series - but particularly the most seasonal series - the hydro consumption. Essentially it's mitigating the variance of each of the seasons! It also moves all of the results down by a number of values - likely the size of the intercept.
+
+```{r}
+
+#compute seasonal component
+energy_seas_comp_1=array(0,nrow(data.edit))
+for(i in 1:nrow(data.edit)){
+  energy_seas_comp_1[i]=(beta_int_1+beta_coeff_1%*%dummies_1[i,])
+}
+
+energy_seas_comp_2=array(0,nrow(data.edit))
+for(i in 1:nrow(data.edit)){
+  energy_seas_comp_2[i]=(beta_int_2+beta_coeff_2%*%dummies_2[i,])
+}
+
+energy_seas_comp_3=array(0,nrow(data.edit))
+for(i in 1:nrow(data.edit)){
+  energy_seas_comp_3[i]=(beta_int_3+beta_coeff_3%*%dummies_3[i,])
+}
+
+#Removing seasonal component
+deseason_energy_data_1 <- data.edit[,2]-energy_seas_comp_1
+deseason_energy_data_2 <- data.edit[,3]-energy_seas_comp_2
+deseason_energy_data_3 <- data.edit[,4]-energy_seas_comp_3
+
+deseason_data<-cbind(date,deseason_energy_data_1, deseason_energy_data_2, deseason_energy_data_3)
+
+
+#Plot the deseasoned series'
+
+ggplot(data.edit, aes(x=date, y=data.edit[,2])) +
+            geom_line(color="blue") +
+            ylab(column.name[1]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=deseason_energy_data_1), col="green")+
+            geom_smooth(aes(y=deseason_energy_data_1),color="orange",method="lm") 
+
+ggplot(data.edit, aes(x=date, y=data.edit[,3])) +
+            geom_line(color="blue") +
+            ylab(column.name[2]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=deseason_energy_data_2), col="green")+
+            geom_smooth(aes(y=deseason_energy_data_2),color="orange",method="lm") 
+
+ggplot(data.edit, aes(x=date, y=data.edit[,4])) +
+            geom_line(color="blue") +
+            ylab(column.name[3]) +
+            #geom_abline(intercept = beta0, slope = beta1, color="red")
+            geom_smooth(color="red",method="lm") +
+            geom_line(aes(y=deseason_energy_data_3), col="green")+
+            geom_smooth(aes(y=deseason_energy_data_3),color="orange",method="lm") 
+
+```
+
+
+### Q8
+Plot ACF and PACF for the deseason series and compare with the plots from Q1. Did the plots change? How?
+
+```{r}
+ts_energy_a3_deseason <- ts(deseason_data[,(2:4)], frequency=12, start=c(1973,1)) 
+head(ts_energy_a3_deseason)
+
+par(mfrow=c(1,2))  #place plot side by side
+for(i in 1:3){
+  Acf(ts_energy_a3_deseason[,i],lag.max=40, main=column.name[i])
+  Pacf(ts_energy_a3_deseason[,i],lag.max=40, main=column.name[i])
+}
+```
+
+*Answer*: The first two plots - biomass and renewable energy - lost what little seasonality they had (shown in the ACF). The Hydro graph changed completed - now there's almost no seasonality at all! At least as displayed in the ACF graph. The PCF also - across all three - displayed fewer time points where there was significant auto-correlation.
+
