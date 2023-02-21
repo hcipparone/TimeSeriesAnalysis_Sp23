@@ -95,6 +95,9 @@ Display and interpret the time series plot for each of these variables. Try to m
 
 ```{r}
 
+
+par(mfrow=c(1,2))
+
 ggplot(data.edit, aes(x=date, y=data.edit[,2])) +
             geom_line(color="blue") +
             ylab("Total Biomass Energy Production")+

@@ -107,17 +107,29 @@ Additional info on decompose()
 ```{r}
 #Ex1: Using R decompose function decompose the wind data in seasonal, trend and random
 
+decompose_wind_data=decompose(clean_wind_data,"additive")
+plot(decompose_wind_data)
+
 
 #Ex2: Store the three component in separate vector
   
+wind_random <- decompose_wind_data$random   
+wind_trend <- decompose_wind_data$trend
+wind_seasonal<-decompose_wind_data$seasonal
+
 
 #Ex3: Create one data frame with all three vector and the Date columns from wind_data
 
+wind_decomp_time<-cbind(full_wind_data[,1], wind_random, wind_seasonal, wind_trend)
 
 #Ex4: Inspect the data frame using head() and tail()
 
+head(wind_decomp_time)
+tail(wind_decomp_time)
 
 # Discuss the results
+
+plot(wind_decomp_time) #Can't see the trend because it's calculated with a centered moving average - whereas seasonal is calculated with the seasonal means model - which assumes that the month-level means are the same across all seasons
 
 ```
 
