@@ -69,7 +69,8 @@ electricity_price_processed <-
 #Generating a box plot by factor where factor is month of the year
 TS_Plot <- 
   ggplot(electricity_price_processed, aes(x=Month, y=Residential)) +
-      geom_line()
+      geom_line()+
+      theme_classic()
 plot(TS_Plot)
 
 #Note that although the date is reversed on the data frame, since we are using the ggplot and a date object, the plot looks right. 
