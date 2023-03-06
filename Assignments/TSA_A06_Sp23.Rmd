@@ -45,7 +45,7 @@ Describe the important characteristics of the sample autocorrelation function (A
 
 
 ## Q2
-Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q)$ where $p$ is the order of the autoregressive component, $d$ is the number of times the series need to be differenced to obtain stationarity and $q$ is the order of the moving average component. If we don't need to difference the series, we don't need to specify the "I" part and we can use the short version, i.e., the ARMA$(p,q)$. Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient. Use R to generate $n=100$ observations from each of these three models
+Recall that the non-seasonal ARIMA is described by three parameters ARIMA$(p,d,q)$ where $p$ is the order of the autoregressive component, $d$ is the number of times the series need to be differenced to obtain stationarity and $q$ is the order of the moving average component. If we don't need to difference the series, we don't need to specify the "I" part and we can use the short version, i.e., the ARMA$(p,q)$. Consider three models: ARMA(1,0), ARMA(0,1) and ARMA(1,1) with parameters $\phi=0.6$ (look at the PACF - is lag 1 .6?) and $\theta= 0.9$. The $\phi$ refers to the AR coefficient and the $\theta$ refers to the MA coefficient (NOT the coefficient on the ACF. can't state this for MA - can only do comparison for AR model). Use R to generate $n=100$ observations from each of these three models
 
 ```{r}
 
@@ -88,6 +88,12 @@ Consider the ARIMA model $y_t=0.7*y_{t-1}-0.25*y_{t-12}+a_t-0.1*a_{t-1}$
 
 
 (a) Identify the model using the notation ARIMA$(p,d,q)(P,D,Q)_ s$, i.e., identify the integers $p,d,q,P,D,Q,s$ (if possible) from the equation.
+
+#think about the constants here. this is usually an indication of whether or not differenced and how many times. 0 or 1 depending on whether or not there is a constant in the equation. First part is finding values of the orders. second part is looking for the regression coefficients. If an AR(1), what is the coefficient? specifically what is multiplying by the AR1.
+
+#There is no constant above that indicates that it's been differenced. so D = 1 or 2. 
+
+#cant compare seasonal vs non seasonal - particularly when you consider constant seasonal component vs. non-constant seasonal component
 
 (b) Also from the equation what are the values of the parameters, i.e., model coefficients. 
 
