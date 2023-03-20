@@ -1,0 +1,42 @@
+---
+title: "Initial TS Project"
+author: "Hugh Cipparone"
+date: "2023-03-08"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(tidyr)
+library(lubridate)
+```
+
+
+
+```{r}
+data<-read.csv("./N_seaice_extent_daily_v3.0.csv",strip.white = TRUE)
+
+data.edit<-data %>% 
+  slice(-1) %>% 
+  unite("date",1:3, sep="-")
+
+Date<-ymd(data.edit$date)
+Year<-year(Date)
+
+data.final<-cbind(data.edit,Date,Year)%>% 
+  select(2,3,5,6)
+
+
+data.1980<-data.final %>% 
+  filter(Year<1990)
+
+ggplot(data.1980, aes(x=Date,y=Extent)) +
+  geom_point()
+
+
+
+ggplot(data.1980, aes(x=Extent)) +
+  geom_bar()
+```
+
