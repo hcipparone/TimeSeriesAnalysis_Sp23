@@ -124,7 +124,9 @@ On M8 we tried several models for both seasonal and deseasonal electricity price
 ### Model 1: Arithmetic mean
 ```{r}
 MEAN_seas <- meanf(y = ts_electricity_price[,"All.sectors"], h = 12)
-checkresiduals(MEAN_seas)
+checkresiduals(MEAN_seas) 
+
+#This shows a strong autoregressive component in the ACF. All together bad. Residuals not around 0
 ```
 Note a clear trend on residuals series, showing that the mean is not a good to model the trend component. And aside from trend the seasonal component is also not being modeled.
 
@@ -132,6 +134,8 @@ Note a clear trend on residuals series, showing that the mean is not a good to m
 ```{r}
 SNAIVE_seas <- snaive(ts_electricity_price[,"All.sectors"], h=12)
 checkresiduals(SNAIVE_seas)
+
+#Also bad
 ```
 The residuals for the seasonal naive don't seem to have a strong trend. Because it repeats the observations that happen in a previous seasonal lag (in this case one year ago), the seasonal naive is able to model the trend and seasonal component. But the residuals series show a strong autoregressive component which is also not desired.
 
@@ -139,9 +143,12 @@ The residuals for the seasonal naive don't seem to have a strong trend. Because 
 ```{r}
 SARIMA_autofit <- auto.arima(ts_electricity_price[,"All.sectors"])
 checkresiduals(SARIMA_autofit)
+
+#Much better than before. residual looks pretty random, ACF within dotted lines, residuals are normal distribution around 0 so pretty good
 ```
 This is by far the best fit. Notice the residual series seems to be random and ACF shows no significant self correlation.
 
+#All of this is backwards looking assessment
 
 ## Model Performance for forecasting 12 steps ahead
 

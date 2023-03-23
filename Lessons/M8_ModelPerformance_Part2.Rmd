@@ -60,17 +60,17 @@ forecast=c(110,121,112,120,109)
 #Exercise 1: compute MAD, MSE and MAPE
 n=length(actual)
 
-ME = 
-MSE = 
-RMSE = 
-MAE = 
-MPE = 
-MAPE = 
-
+ME = sum(107-110,125-121,115-112,118-120,108-109)/5
+MSE = sum((107-110)^2,(125-121)^2,(115-112)^2,(118-120)^2,(108-109)^2)/5
+RMSE = sqrt(MSE)
+MAE = sum(abs(107-110),abs(125-121),abs(115-112),abs(118-120),abs(108-109))/5
+MPE = sum((107-110)/107,(125-121)/125,(115-112)/115,(118-120)/118,(108-109)/108)/5*100
+MAPE = sum(abs(107-110)/107,abs(125-121)/125,abs(115-112)/115,abs(118-120)/118,abs(108-109)/108)/5*100
 
 
 #Exercise 2: Compute the forecast accuracy metrics you calculated in Ex 1 with the results from accuracy() function.
 
+accuracy(forecast,actual)
 
 ```
 
