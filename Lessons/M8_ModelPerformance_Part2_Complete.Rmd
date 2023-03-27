@@ -181,6 +181,9 @@ plot(SES_deseas)  #
 A better visualization of the results from `accuracy()` can be obtained by creating a data frame where rows correspond to models and columns to metrics. You can choose one metric to help you choose among models.
 
 ```{r}
+
+#RMSE is often used to evaluate model value. Good to lean on
+
 # Exercise 5: create data frame that combines metrics for all the models you created on Ex 3.
 deseas_scores <- as.data.frame(rbind(NAIVE_scores, ARIMA_scores, SES_scores))
 row.names(deseas_scores) <- c("NAIVE", "ARIMA","SES")

@@ -145,6 +145,11 @@ Which models could be used to forecast the non-seasonal temperature series? When
 ```{r}
 #Exercise 3: Try fitting different model to the deseasonal series. Check the residuals using the checkresiduals() function.
 
+#Try naive here
+
+
+
+
 
 
 ```
