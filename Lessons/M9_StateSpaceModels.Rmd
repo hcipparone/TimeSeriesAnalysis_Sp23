@@ -189,9 +189,17 @@ The function takes a few arguments, here are the important ones:
 
 
 ```{r}
+
+#This is if we have truly no prior expectation of the distribution of the variables
+SS_seas <- StructTS(ts_price,
+                    type="BSM",fixed=c(NA,NA,NA,NA)) 
+
+#this assumes we have some sense of the distribution
 SS_seas <- StructTS(ts_price,
                     type="BSM",fixed=c(0,0.001,0.3,NA))   #this function has convergence issues
 checkresiduals(SS_seas)
+
+#convergence issues = it isn't finding the actual best model. Might find a local min/max but not a global min/max
 
 #Generating forecasts
 # StructTS() does not call the forecast() internally so we need one more step
