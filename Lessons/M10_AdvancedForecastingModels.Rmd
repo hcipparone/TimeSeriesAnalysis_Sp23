@@ -182,11 +182,11 @@ Recall from `ts()` function that frequency is the number of observation per seas
 
 ```{r message=FALSE, warning=FALSE}
 ts_act_power_hourly <- msts(act_power_hourly$hourly_mean_active_power, 
-                            seasonal.periods =c(24,168,8766), #
+                            seasonal.periods =c(24,168,8766), #based on hourly periods as opposed to daily periods
                             start=c(2006,12,16))
 
 ts_act_power_daily <- msts(act_power_daily$daily_mean_active_power, 
-                           seasonal.periods =c(7,365.25),
+                           seasonal.periods =c(7,365.25), #accounts for leap years
                            start=c(2006,12,16))
 
 ```
@@ -231,7 +231,7 @@ autoplot(ts_act_power_daily_train)
 autoplot(ts_act_power_daily_test)
 ```
 
-### Model 1: STL + ETS
+### Model 1: STL + ETS (Seasonal Trend Linear + Error Trend Seasonal model - combining non-seasonal model with seasonal model)
 
 Forecasts of `stl` objects can be obtained using function `stlf()`. Forecast will be obtained by applying a non-seasonal exponential smoothing model to the seasonally adjusted data and re-seasonalizing using the last year of the seasonal component (for all seasonal components). 
 
@@ -263,7 +263,7 @@ autoplot(ts_act_power_daily) +
 ```
 
 
-### Model 2: ARIMA + FOURIER terms
+### Model 2: ARIMA + FOURIER terms (ARIMA to capture trend and Fourier terms to represent seasonality - Fourier represents multiple types of seasonality)
 
 Since we have multiple seasonalities, the SARIMA model will not work. But we can work with an ARIMA model with Fourier terms for each seasonal period. This models is known as a dynamic harmonic regression model with an ARMA error structure. We will use a log transformation (`lambda=0`) in the `auto.arima()` to ensure the forecasts and prediction intervals remain positive. And for the fourier terms we will use function `fourier()` from package `forecast`. The number of fourier terms needed is specified in argument `K=`. K should be a vector of integers specifying the number of sine and cosine terms for each of the seasonal periods. Ideally K is chosen to minimize the AICc, but we will not go over it. 
 
@@ -286,7 +286,7 @@ ARIMA_Four_fit <- auto.arima(ts_act_power_daily_train,
 ARIMA_Four_for <- forecast(ARIMA_Four_fit,
                            xreg=fourier(ts_act_power_daily_train,
                                         K=c(2,12), #two different seasonal means models over 12 months)
-                                        h=365),
+                                        h=365), #forecast over next 365 days - need the xreg to capture the fourier aspect of this
                            h=365
                            ) 
 
@@ -300,7 +300,7 @@ autoplot(ts_act_power_daily) +
 
 ```
 
-### Model 3: TBATS
+### Model 3: TBATS - like ES but can do multiple aspects
 
 BATS is Exponential smoothing state space model with **B**ox-Cox transformation, **A**RMA errors, **T**rend and **S**easonal components. TBATS is a trigonometric seasonal variation of BATS. A Box Cox transformation is a transformation of non-normal dependent variables into a normal shape. 
 
